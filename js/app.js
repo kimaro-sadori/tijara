@@ -15,11 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('hero-cta').href = config.hero.ctaLink;
 
         const heroSec = document.getElementById('hero-section');
-        if (config.hero.backgroundType === 'gradient' || config.hero.backgroundType === 'color') {
-            heroSec.style.background = config.hero.backgroundValue;
-            heroSec.style.backgroundImage = '';
-        } else {
+        if (config.hero.backgroundType === 'image') {
+            heroSec.style.background = ''; // Clear background color/gradient
             heroSec.style.backgroundImage = `url('${config.hero.backgroundValue}')`;
+        } else {
+            heroSec.style.backgroundImage = ''; // Clear image
+            heroSec.style.background = config.hero.backgroundValue;
+        }
+
+        // Timer Visibility
+        const flashSaleSection = document.getElementById('flash-sale-section');
+        if (flashSaleSection) {
+            flashSaleSection.style.display = config.showTimer ? 'block' : 'none';
         }
 
         // Theme
@@ -39,29 +46,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Render Products
     function renderProducts() {
         const products = Store.getProducts();
+        console.log('Rendering products:', products);
         const grid = document.getElementById('product-grid');
         
+        if (!grid) return;
+
         if (products.length === 0) {
             grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 60px; color: #999;">No products available. Visit admin to add some!</p>';
             return;
         }
 
-        grid.innerHTML = products.map(p => `
-            <div class="product-card" onclick="location.href='product.html?id=${p.id}'">
-                <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
-                <div class="product-info">
-                    <h3 class="product-name">${p.name}</h3>
-                    <div class="product-price">
-                        $${p.price}
-                        <span class="price-old">$${(p.price * 1.4).toFixed(2)}</span>
-                    </div>
-                    <div class="product-footer">
-                        <span>Best Seller</span>
-                        <span>Free Shipping</span>
+        grid.innerHTML = products.map(p => {
+            const img = (p.images && p.images.length > 0) ? p.images[0] : 'https://via.placeholder.com/300x300?text=No+Image';
+            return `
+                <div class="product-card" onclick="location.href='product.html?id=${p.id}'">
+                    <img src="${img}" alt="${p.name}" loading="lazy">
+                    <div class="product-info">
+                        <h3 class="product-name">${p.name}</h3>
+                        <div class="product-price">
+                            ${p.price} DH
+                            <span class="price-old">${(p.price * 1.4).toFixed(2)} DH</span>
+                        </div>
+                        <div class="product-footer">
+                            <span>Best Seller</span>
+                            <span>Free Shipping</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // 3. Cart Badge
@@ -80,6 +93,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('configUpdated', applyConfig);
     window.addEventListener('productsUpdated', renderProducts);
     window.addEventListener('cartUpdated', updateCartBadge);
+    
+    // Cross-tab synchronization
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'temu_config') applyConfig();
+        if (e.key === 'temu_products') renderProducts();
+        if (e.key === 'temu_cart') updateCartBadge();
+    });
 
     // Countdown
     let time = 7200; 

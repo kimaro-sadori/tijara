@@ -166,6 +166,7 @@
 
         function renderCart() {
             const cart = Store.getCart();
+            const config = Store.getConfig();
             const container = document.getElementById('cart-items-container');
             
             if (cart.length === 0) {
@@ -176,7 +177,7 @@
                         <a href="index.html" class="btn-cta" style="display: inline-block; margin-top: 20px;">Start Shopping</a>
                     </div>
                 `;
-                updateSummary(0);
+                updateSummary(0, 0);
                 return;
             }
 
@@ -186,7 +187,7 @@
                     <div class="cart-item-info">
                         <h3 style="font-size: 16px;">${item.name}</h3>
                         <p style="color: #666; font-size: 14px; margin: 5px 0;">Size: ${item.selectedSize || 'N/A'}</p>
-                        <p style="font-weight: 800; color: var(--primary);">$${item.price}</p>
+                        <p style="font-weight: 800; color: var(--primary);">${item.price} DH</p>
                         <div class="quantity-controls">
                             <button class="qty-btn" onclick="updateQty(${item.id}, '${item.selectedSize}', -1)">-</button>
                             <span>${item.quantity}</span>
@@ -200,13 +201,24 @@
             `).join('');
 
             const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-            updateSummary(subtotal);
+            updateSummary(subtotal, config.shippingPrice || 0);
         }
 
-        function updateSummary(total) {
-            const formatted = `$${total.toFixed(2)}`;
-            document.getElementById('subtotal').innerText = formatted;
-            document.getElementById('total-price').innerText = formatted;
+        function updateSummary(subtotal, shipping) {
+            const total = subtotal + shipping;
+            document.getElementById('subtotal').innerText = `${subtotal.toFixed(2)} DH`;
+            const shipEl = document.getElementById('total-price').parentElement.previousElementSibling.previousElementSibling.children[1];
+            
+            const shippingDisplay = document.querySelector('.summary-card div:nth-child(3) span:last-child');
+            if (shipping === 0) {
+                shippingDisplay.innerText = 'FREE';
+                shippingDisplay.style.color = '#25d366';
+            } else {
+                shippingDisplay.innerText = `${shipping.toFixed(2)} DH`;
+                shippingDisplay.style.color = 'inherit';
+            }
+            
+            document.getElementById('total-price').innerText = `${total.toFixed(2)} DH`;
         }
 
         function updateQty(id, size, delta) {
@@ -247,7 +259,7 @@
             const cart = Store.getCart();
             const total = document.getElementById('total-price').innerText;
 
-            let orderDetails = cart.map(item => `- ${item.name} (Size: ${item.selectedSize}, Qty: ${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`).join('\n');
+            let orderDetails = cart.map(item => `- ${item.name} (Size: ${item.selectedSize}, Qty: ${item.quantity}) - ${(item.price * item.quantity).toFixed(2)} DH`).join('\n');
             
             // 1. Save to LocalStorage (Backup/Excel-like Table)
             Store.addOrder({

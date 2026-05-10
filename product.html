@@ -91,7 +91,7 @@
 
             document.getElementById('p-detail-name').innerText = currentProduct.name;
             document.getElementById('p-detail-price').innerText = currentProduct.price;
-            document.querySelector('.price-old').innerText = `$${(currentProduct.price * 1.4).toFixed(2)}`;
+            document.querySelector('.price-old').innerText = `${(currentProduct.price * 1.4).toFixed(2)} DH`;
             document.getElementById('p-detail-desc').innerText = currentProduct.description;
 
             const slideshow = document.getElementById('slideshow');
@@ -145,11 +145,11 @@
             Store.addOrder({
                 customer: { name: 'Direct WhatsApp', phone: 'N/A' },
                 details: `${currentProduct.name} (Size: ${selectedSize || 'N/A'})`,
-                total: `$${currentProduct.price}`
+                total: `${currentProduct.price} DH`
             });
 
             const phone = '+212776165813';
-            const message = `Hello, I want to order:\n\n*Product:* ${currentProduct.name}\n*Price:* $${currentProduct.price}\n*Size:* ${selectedSize || 'N/A'}\n\nThank you!`;
+            const message = `Hello, I want to order:\n\n*Product:* ${currentProduct.name}\n*Price:* ${currentProduct.price} DH\n*Size:* ${selectedSize || 'N/A'}\n\nThank you!`;
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
         }
     </script>

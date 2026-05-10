@@ -3,16 +3,18 @@
     --primary: #FF6600;
     --primary-hover: #e65c00;
     --secondary: #000000;
-    --text: #333333;
-    --text-muted: #757575;
-    --bg: #f6f6f6;
+    --text: #2d3436;
+    --text-muted: #636e72;
+    --bg: #f8f9fa;
     --card-bg: #ffffff;
     --white: #ffffff;
-    --border: #eeeeee;
-    --shadow: 0 4px 12px rgba(0,0,0,0.08);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --container: 1240px;
-    --radius: 12px;
+    --border: #edf2f7;
+    --shadow: 0 10px 30px rgba(0,0,0,0.05);
+    --shadow-hover: 0 20px 40px rgba(0,0,0,0.1);
+    --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    --container: 1280px;
+    --radius: 16px;
+    --radius-sm: 8px;
 }
 
 [data-theme="dark"] {
@@ -155,8 +157,8 @@ header {
 /* Hero Section */
 .hero {
     margin: 20px 0;
-    border-radius: 20px;
-    padding: 80px 40px;
+    border-radius: var(--radius);
+    padding: 100px 60px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,7 +166,24 @@ header {
     color: var(--white);
     background-size: cover;
     background-position: center;
-    min-height: 400px;
+    min-height: 500px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5));
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
 }
 
 .hero-content h1 {
@@ -226,12 +245,26 @@ header {
     transition: var(--transition);
     border: 1px solid var(--border);
     cursor: pointer;
+    position: relative;
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-hover);
     border-color: var(--primary);
+}
+
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255,102,0,0.03);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.product-card:hover::before {
+    opacity: 1;
 }
 
 .product-card img {

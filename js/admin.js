@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const products = Store.getProducts();
 
         // Stats
-        const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total.replace('$', '')), 0);
-        document.getElementById('stat-revenue').innerText = `$${totalRevenue.toFixed(2)}`;
+        const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total.replace(' DH', '')), 0);
+        document.getElementById('stat-revenue').innerText = `${totalRevenue.toFixed(2)} DH`;
         document.getElementById('stat-orders').innerText = orders.length;
         document.getElementById('stat-products').innerText = products.length;
 
@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('set-site-name').value = config.siteName;
         document.getElementById('set-announcement').value = config.announcement;
         document.getElementById('set-shipping-banner').value = config.shippingBanner || '';
+        document.getElementById('set-show-timer').checked = config.showTimer;
+        document.getElementById('set-shipping-price').value = config.shippingPrice || 0;
         document.getElementById('set-hero-headline').value = config.hero.headline;
         document.getElementById('set-hero-subtext').value = config.hero.subtext;
         document.getElementById('set-hero-cta').value = config.hero.ctaLabel;
@@ -108,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td><img src="${p.images[0]}" style="width:50px; height:50px; object-fit:cover; border-radius:8px;"></td>
                 <td>${p.name}</td>
-                <td>$${p.price}</td>
+                <td>${p.price} DH</td>
                 <td><small>${p.sizes.join(', ')}</small></td>
                 <td>
                     <button class="btn-save" style="padding:5px 10px; background:#3498db;" onclick="editProduct(${p.id})"><i class="fa-solid fa-pen"></i></button>
@@ -146,13 +148,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.renderFooterEditor = () => {
         const config = Store.getConfig();
         const editor = document.getElementById('footer-editor');
+        if (!editor) return;
+        
         editor.innerHTML = config.footer.columns.map((col, i) => `
-            <div class="admin-card" style="border: 1px solid #eee;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <input type="text" value="${col.title}" onchange="updateFooterCol(${i}, 'title', this.value)" style="font-weight:bold; width:70%;">
-                    <button style="color:red; border:none; background:none; cursor:pointer;" onclick="removeFooterCol(${i})"><i class="fa-solid fa-times"></i></button>
+            <div class="admin-card" style="border: 1px solid #edf2f7; margin-bottom: 15px; padding: 15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <input type="text" value="${col.title}" oninput="updateFooterCol(${i}, 'title', this.value)" style="font-weight:bold; width:80%; border:none; border-bottom:1px solid #ddd; outline:none; padding:5px;">
+                    <button style="color:#ff5e57; border:none; background:none; cursor:pointer; font-size:18px;" onclick="removeFooterCol(${i})"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <textarea onchange="updateFooterCol(${i}, 'links', this.value)" style="height:60px;">${col.links.join('\n')}</textarea>
+                <textarea oninput="updateFooterCol(${i}, 'links', this.value)" style="height:80px; width:100%; resize:none; padding:10px; border:1px solid #eee; border-radius:8px; font-size:13px;" placeholder="One link per line">${col.links.join('\n')}</textarea>
             </div>
         `).join('');
     };
@@ -166,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addFooterColumn = () => {
         const config = Store.getConfig();
+        if (!config.footer.columns) config.footer.columns = [];
         config.footer.columns.push({ title: 'New Column', links: ['Link 1'] });
         Store.saveConfig(config);
         renderFooterEditor();
@@ -216,6 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
         config.siteName = document.getElementById('set-site-name').value;
         config.announcement = document.getElementById('set-announcement').value;
         config.shippingBanner = document.getElementById('set-shipping-banner').value;
+        config.showTimer = document.getElementById('set-show-timer').checked;
+        config.shippingPrice = parseFloat(document.getElementById('set-shipping-price').value) || 0;
         config.hero.headline = document.getElementById('set-hero-headline').value;
         config.hero.subtext = document.getElementById('set-hero-subtext').value;
         config.hero.ctaLabel = document.getElementById('set-hero-cta').value;
@@ -233,7 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
         const activeLink = document.querySelector(`.sidebar-nav a[onclick*="${tab}"]`);
         if (activeLink) activeLink.classList.add('active');
-        if (tab === 'dashboard') loadAdminData(); // Refresh stats
+        
+        // Refresh data whenever we switch tabs to ensure everything is current
+        loadAdminData(); 
+    };
+
+    window.toggleHeroBg = () => {
+        const type = document.getElementById('set-hero-bg-type').value;
+        const uploadBox = document.getElementById('hero-img-upload').parentElement;
+        if (type === 'image') {
+            uploadBox.style.display = 'block';
+        } else {
+            uploadBox.style.display = 'none';
+        }
     };
 
     window.logout = () => { Store.logout(); };

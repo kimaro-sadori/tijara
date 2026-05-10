@@ -4,6 +4,8 @@ const Store = {
         siteName: 'TEMU',
         announcement: 'FREE SHIPPING ON ALL ORDERS | EXTRA 30% OFF FOR NEW USERS',
         shippingBanner: 'Free Shipping on all orders today!',
+        showTimer: true,
+        shippingPrice: 0,
         hero: {
             headline: 'Spring Mega Sale',
             subtext: 'Up to 90% Off on everything you love!',
@@ -38,9 +40,21 @@ const Store = {
     },
 
     init() {
-        if (!localStorage.getItem('temu_config')) {
+        const savedConfig = localStorage.getItem('temu_config');
+        if (!savedConfig) {
             localStorage.setItem('temu_config', JSON.stringify(this.defaultConfig));
+        } else {
+            // Merge defaults to ensure new fields are added to existing configs
+            const current = JSON.parse(savedConfig);
+            const merged = { ...this.defaultConfig, ...current, 
+                hero: { ...this.defaultConfig.hero, ...current.hero },
+                footer: { ...this.defaultConfig.footer, ...current.footer },
+                theme: { ...this.defaultConfig.theme, ...current.theme },
+                admin: { ...this.defaultConfig.admin, ...current.admin }
+            };
+            localStorage.setItem('temu_config', JSON.stringify(merged));
         }
+
         if (!localStorage.getItem('temu_products')) {
             localStorage.setItem('temu_products', JSON.stringify([]));
         }
@@ -55,8 +69,13 @@ const Store = {
     },
 
     saveConfig(config) {
-        localStorage.setItem('temu_config', JSON.stringify(config));
-        window.dispatchEvent(new CustomEvent('configUpdated', { detail: config }));
+        try {
+            localStorage.setItem('temu_config', JSON.stringify(config));
+            window.dispatchEvent(new CustomEvent('configUpdated', { detail: config }));
+        } catch (e) {
+            console.error('Failed to save config to localStorage:', e);
+            alert('Storage limit reached! Try using smaller images.');
+        }
     },
 
     // Admin Auth
@@ -84,8 +103,13 @@ const Store = {
     },
 
     saveProducts(products) {
-        localStorage.setItem('temu_products', JSON.stringify(products));
-        window.dispatchEvent(new CustomEvent('productsUpdated', { detail: products }));
+        try {
+            localStorage.setItem('temu_products', JSON.stringify(products));
+            window.dispatchEvent(new CustomEvent('productsUpdated', { detail: products }));
+        } catch (e) {
+            console.error('Failed to save products to localStorage:', e);
+            alert('Storage limit reached! Please use smaller images or remove some products.');
+        }
     },
 
     addProduct(product) {
