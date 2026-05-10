@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Temu-Style</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --admin-primary: #FF6600; --admin-bg: #f4f7f6; }
+        body.admin-body { background: var(--admin-bg); font-family: 'Inter', sans-serif; color: #2d3436; }
+        
+        #admin-login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+
+        #admin-dashboard { display: none; grid-template-columns: 260px 1fr; min-height: 100vh; }
+        .admin-sidebar { background: #1e272e; color: white; padding: 30px 20px; position: sticky; top: 0; height: 100vh; }
+        .admin-sidebar h2 { color: var(--admin-primary); margin-bottom: 40px; font-family: 'Outfit', sans-serif; }
+        .sidebar-nav { list-style: none; }
+        .sidebar-nav li { margin-bottom: 8px; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 10px; color: #d2dae2; text-decoration: none; transition: 0.3s; cursor: pointer; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,102,0,0.15); color: var(--admin-primary); }
+
+        .admin-main { padding: 40px; overflow-y: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; }
+        .stat-card h3 { font-size: 14px; color: #7f8c8d; margin-bottom: 10px; }
+        .stat-card .value { font-size: 28px; font-weight: 800; color: #2d3436; }
+
+        .admin-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        .admin-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        .admin-table th { background: #f8f9fa; color: #7f8c8d; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        .admin-table th, .admin-table td { padding: 18px; text-align: left; border-bottom: 1px solid #eee; }
+        
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        .control-group input, .control-group textarea, .control-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; font-size: 14px; }
+
+        .btn-save { background: var(--admin-primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,102,0,0.3); }
+
+        #product-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 35px; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+
+        .img-preview-box { width: 60px; height: 60px; border-radius: 8px; border: 2px dashed #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+        .img-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body class="admin-body">
+
+    <!-- Login Screen -->
+    <div id="admin-login-screen">
+        <div class="login-box">
+            <h1 style="color: var(--admin-primary); text-align: center; margin-bottom: 25px; font-family: 'Outfit';">ADMIN DASHBOARD</h1>
+            <form id="admin-login-form">
+                <div class="control-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="control-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn-save" style="width: 100%;">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="admin-dashboard">
+        <aside class="admin-sidebar">
+            <h2>TEMU ADMIN</h2>
+            <ul class="sidebar-nav">
+                <li><a onclick="switchTab('dashboard')" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li><a onclick="switchTab('orders')"><i class="fa-solid fa-cart-shopping"></i> Orders History</a></li>
+                <li><a onclick="switchTab('products')"><i class="fa-solid fa-box"></i> Products</a></li>
+                <li><a onclick="switchTab('settings')"><i class="fa-solid fa-sliders"></i> Store Config</a></li>
+                <li><a onclick="logout()" style="margin-top: 40px; color: #ff5e57;"><i class="fa-solid fa-power-off"></i> Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-main">
+            <!-- Dashboard Tab (Stats) -->
+            <div id="tab-dashboard" class="tab-content">
+                <h1 style="margin-bottom: 30px;">Overview</h1>
+                <div class="stats-grid">
+                    <div class="stat-card"><h3>Total Revenue</h3><div class="value" id="stat-revenue">$0</div></div>
+                    <div class="stat-card"><h3>Total Orders</h3><div class="value" id="stat-orders">0</div></div>
+                    <div class="stat-card"><h3>Total Products</h3><div class="value" id="stat-products">0</div></div>
+                    <div class="stat-card"><h3>Conversion Rate</h3><div class="value">4.2%</div></div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-header"><h3>Recent Orders</h3><a onclick="switchTab('orders')" style="color: var(--admin-primary); cursor: pointer; font-weight: 600;">View All</a></div>
+                    <table class="admin-table">
+                        <thead><tr><th>ID</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody id="recent-orders-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="tab-orders" class="tab-content" style="display: none;">
+                <h1 style="margin-bottom: 30px;">Order Management</h1>
+                <div class="admin-card">
+                    <table class="admin-table" id="orders-excel-table">
+                        <thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Details</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody id="full-orders-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div id="tab-products" class="tab-content" style="display: none;">
+                <div class="admin-header"><h1>Manage Inventory</h1><button class="btn-save" onclick="openProductModal()">+ Add Product</button></div>
+                <div class="admin-card">
+                    <table class="admin-table">
+                        <thead><tr><th>Preview</th><th>Name</th><th>Price</th><th>Sizes</th><th>Actions</th></tr></thead>
+                        <tbody id="admin-product-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="tab-settings" class="tab-content" style="display: none;">
+                <div class="admin-header"><h1>Configuration</h1><button class="btn-save" onclick="saveSettings()">Save Configuration</button></div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div class="admin-card">
+                        <h3>Site Identity</h3>
+                        <div class="control-group"><label>Website Name</label><input type="text" id="set-site-name"></div>
+                        <div class="control-group"><label>Announcement Bar</label><input type="text" id="set-announcement"></div>
+                        <div class="control-group"><label>Shipping Info Banner</label><input type="text" id="set-shipping-banner"></div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>Hero Section</h3>
+                        <div class="control-group"><label>Headline</label><input type="text" id="set-hero-headline"></div>
+                        <div class="control-group"><label>Subtext</label><textarea id="set-hero-subtext"></textarea></div>
+                        <div class="control-group"><label>CTA Label</label><input type="text" id="set-hero-cta"></div>
+                        <div class="control-group">
+                            <label>Background Type</label>
+                            <select id="set-hero-bg-type" onchange="toggleHeroBg()"><option value="gradient">Gradient</option><option value="color">Solid Color</option><option value="image">Custom Image</option></select>
+                        </div>
+                        <div class="control-group"><label>Background Value (Color/URL/Gradient)</label><input type="text" id="set-hero-bg-value"></div>
+                        <div class="control-group"><label>Upload Image Instead</label><input type="file" id="hero-img-upload" accept="image/*" onchange="handleHeroUpload(this)"></div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Footer Customization (Columns)</h3>
+                    <div id="footer-editor">
+                        <!-- Dynamic Columns -->
+                    </div>
+                    <button class="btn-save" style="background: #27ae60; font-size: 12px;" onclick="addFooterColumn()">+ Add Column</button>
+                </div>
+                
+                <div class="admin-card">
+                    <h3>Categories Management</h3>
+                    <div id="category-list-admin">
+                        <!-- Dynamic Categories -->
+                    </div>
+                    <button class="btn-save" style="background: #27ae60; font-size: 12px;" onclick="addCategoryAdmin()">+ Add Category</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="product-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Product Details</h2>
+            <form id="product-form">
+                <input type="hidden" id="p-id">
+                <div class="control-group"><label>Product Name</label><input type="text" id="p-name" required></div>
+                <div class="control-group"><label>Price ($)</label><input type="number" step="0.01" id="p-price" required></div>
+                <div class="control-group"><label>Description</label><textarea id="p-desc" style="height: 80px;"></textarea></div>
+                <div class="control-group"><label>Available Sizes (Comma separated)</label><input type="text" id="p-sizes" value="S, M, L, XL"></div>
+                <div class="control-group">
+                    <label>Images</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;" id="p-image-previews"></div>
+                    <input type="file" id="p-img-upload" accept="image/*" multiple onchange="handleProductImgUpload(this)">
+                    <textarea id="p-images" style="display: none;"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn-save" style="background: #ccc;" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-save">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/store.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

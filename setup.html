@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Setup | Temu-Style</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .setup-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        .logo {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #FF6600;
+            margin-bottom: 20px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus {
+            border-color: #FF6600;
+        }
+        .setup-btn {
+            width: 100%;
+            padding: 15px;
+            background: #FF6600;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .setup-btn:hover {
+            background: #e65c00;
+        }
+        .info-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-card">
+        <div class="logo">TEMU-STYLE</div>
+        <h2>Admin First-Time Setup</h2>
+        <form id="setup-form">
+            <div class="form-group">
+                <label>Choose Username</label>
+                <input type="text" id="username" value="admin" required>
+            </div>
+            <div class="form-group">
+                <label>Set Secure Password</label>
+                <input type="password" id="password" placeholder="At least 8 characters" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirm-password" placeholder="Repeat password" required>
+            </div>
+            <button type="submit" class="setup-btn">Complete Setup</button>
+        </form>
+        <p class="info-text">This will be your master account. Keep these credentials safe.</p>
+    </div>
+
+    <script src="js/store.js"></script>
+    <script>
+        // Check if already setup
+        const config = Store.getConfig();
+        if (config.admin.isSetup) {
+            window.location.href = 'admin-panel-x7k.html';
+        }
+
+        document.getElementById('setup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm-password').value;
+
+            if (pass !== confirm) {
+                alert("Passwords don't match!");
+                return;
+            }
+
+            Store.setupAdmin(user, pass);
+            alert("Setup complete! Redirecting to login...");
+            window.location.href = 'admin-panel-x7k.html';
+        });
+    </script>
+</body>
+</html>

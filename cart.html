@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart | TEMU</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        .cart-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .cart-item {
+            display: flex;
+            gap: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+        .cart-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .cart-item-info {
+            flex: 1;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .summary-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            position: sticky;
+            top: 100px;
+        }
+        .checkout-btn {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #checkout-form-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="nav-wrap">
+                <a href="index.html" class="logo" id="site-logo">TEMU</a>
+                <div class="nav-actions">
+                    <a href="index.html" class="action-item">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1 style="margin-top: 40px;">Shopping Cart</h1>
+        
+        <div class="cart-grid">
+            <div id="cart-items-container">
+                <!-- Dynamic -->
+            </div>
+
+            <div class="summary-card">
+                <h3>Order Summary</h3>
+                <div style="display: flex; justify-content: space-between; margin: 20px 0;">
+                    <span>Subtotal</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <span>Shipping</span>
+                    <span style="color: #25d366; font-weight: bold;">FREE</span>
+                </div>
+                <hr>
+                <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 20px; font-weight: 800;">
+                    <span>Total</span>
+                    <span id="total-price">$0.00</span>
+                </div>
+                <button class="checkout-btn" onclick="openCheckoutForm()">Proceed to Checkout</button>
+                <p style="font-size: 12px; color: #666; text-align: center; margin-top: 15px;">
+                    <i class="fa-solid fa-shield-halved"></i> Secure Checkout
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Checkout Form Modal -->
+    <div id="checkout-form-modal">
+        <div class="summary-card" style="width: 100%; max-width: 500px;">
+            <h2 style="margin-bottom: 20px;">Contact Information</h2>
+            <form id="order-form">
+                <div class="control-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name</label>
+                    <input type="text" id="cust-name" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;" required>
+                </div>
+                <div class="control-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email Address</label>
+                    <input type="email" id="cust-email" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;" required>
+                </div>
+                <div class="control-group" style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone Number</label>
+                    <input type="tel" id="cust-phone" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;" required>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="checkout-btn" style="background: #ccc;" onclick="closeCheckoutForm()">Cancel</button>
+                    <button type="submit" class="checkout-btn">Place Order via WhatsApp</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/store.js"></script>
+    <script>
+        // Initialize EmailJS
+        (function(){
+            emailjs.init("YOUR_PUBLIC_KEY"); // User should replace this or I can use a generic setup
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const config = Store.getConfig();
+            document.getElementById('site-logo').innerText = config.siteName;
+            document.documentElement.style.setProperty('--primary', config.theme.primaryColor);
+            renderCart();
+        });
+
+        function renderCart() {
+            const cart = Store.getCart();
+            const container = document.getElementById('cart-items-container');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px; background: white; border-radius: 20px;">
+                        <i class="fa-solid fa-cart-shopping" style="font-size: 64px; color: #eee; margin-bottom: 20px;"></i>
+                        <h2>Your cart is empty</h2>
+                        <a href="index.html" class="btn-cta" style="display: inline-block; margin-top: 20px;">Start Shopping</a>
+                    </div>
+                `;
+                updateSummary(0);
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.images[0]}" alt="${item.name}">
+                    <div class="cart-item-info">
+                        <h3 style="font-size: 16px;">${item.name}</h3>
+                        <p style="color: #666; font-size: 14px; margin: 5px 0;">Size: ${item.selectedSize || 'N/A'}</p>
+                        <p style="font-weight: 800; color: var(--primary);">$${item.price}</p>
+                        <div class="quantity-controls">
+                            <button class="qty-btn" onclick="updateQty(${item.id}, '${item.selectedSize}', -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="qty-btn" onclick="updateQty(${item.id}, '${item.selectedSize}', 1)">+</button>
+                            <button style="margin-left: auto; color: #ff4d4f; border: none; background: none; cursor: pointer;" onclick="removeItem(${item.id}, '${item.selectedSize}')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            updateSummary(subtotal);
+        }
+
+        function updateSummary(total) {
+            const formatted = `$${total.toFixed(2)}`;
+            document.getElementById('subtotal').innerText = formatted;
+            document.getElementById('total-price').innerText = formatted;
+        }
+
+        function updateQty(id, size, delta) {
+            const cart = Store.getCart();
+            const item = cart.find(i => i.id == id && i.selectedSize == size);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    removeItem(id, size);
+                } else {
+                    localStorage.setItem('temu_cart', JSON.stringify(cart));
+                    renderCart();
+                }
+            }
+        }
+
+        function removeItem(id, size) {
+            Store.removeFromCart(id, size);
+            renderCart();
+        }
+
+        function openCheckoutForm() {
+            const cart = Store.getCart();
+            if (cart.length === 0) return;
+            document.getElementById('checkout-form-modal').style.display = 'flex';
+        }
+
+        function closeCheckoutForm() {
+            document.getElementById('checkout-form-modal').style.display = 'none';
+        }
+
+        document.getElementById('order-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const custName = document.getElementById('cust-name').value;
+            const custEmail = document.getElementById('cust-email').value;
+            const custPhone = document.getElementById('cust-phone').value;
+            const cart = Store.getCart();
+            const total = document.getElementById('total-price').innerText;
+
+            let orderDetails = cart.map(item => `- ${item.name} (Size: ${item.selectedSize}, Qty: ${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`).join('\n');
+            
+            // 1. Save to LocalStorage (Backup/Excel-like Table)
+            Store.addOrder({
+                customer: { name: custName, email: custEmail, phone: custPhone },
+                details: orderDetails,
+                total: total
+            });
+
+            // 2. WhatsApp Integration
+            const phone = '+212776165813';
+            const waMessage = `*New Order from ${custName}*\n\n*Contact:* ${custPhone}\n*Email:* ${custEmail}\n\n*Items:*\n${orderDetails}\n\n*Total:* ${total}\n\nThank you!`;
+            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMessage)}`;
+
+            // 2. EmailJS Integration (Simulated/Ready)
+            const templateParams = {
+                to_email: 'mrztsb@gmail.com',
+                from_name: custName,
+                from_email: custEmail,
+                order_details: orderDetails,
+                total_price: total,
+                phone: custPhone
+            };
+
+            // Uncomment this when user provides Service/Template IDs
+            /*
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+                .then(() => console.log('Email sent successfully!'))
+                .catch(err => console.error('Email error:', err));
+            */
+
+            // Redirect to WhatsApp
+            window.open(waUrl, '_blank');
+            
+            // Clear cart and redirect
+            Store.clearCart();
+            alert('Order placed successfully! Redirecting back to shop.');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

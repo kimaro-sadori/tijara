@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | TEMU</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="nav-wrap">
+                <a href="index.html" class="logo" id="site-logo">TEMU</a>
+                <div class="nav-actions">
+                    <div class="action-item" onclick="location.href='index.html'">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </div>
+                    <div class="action-item" style="position: relative;" onclick="location.href='cart.html'">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span>Cart</span>
+                        <span id="cart-count-badge" class="cart-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="product-detail-container" class="detail-grid">
+            <div class="detail-left">
+                <div id="slideshow" class="slideshow-container" style="background:#fff; border:1px solid #eee;"></div>
+                <div id="slide-dots" class="slide-dots"></div>
+            </div>
+
+            <div class="detail-info">
+                <h1 id="p-detail-name"></h1>
+                <div id="p-badges" style="margin: 10px 0 20px; display: flex; gap: 10px;">
+                    <span style="background:#f6f6f6; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Verified Quality</span>
+                    <span style="background:#f6f6f6; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600;">Fast Delivery</span>
+                </div>
+                
+                <div class="detail-price">
+                    $<span id="p-detail-price"></span>
+                    <span class="price-old" style="font-size: 20px;"></span>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 12px;">Select Size:</label>
+                    <div id="size-selector" class="size-selector"></div>
+                </div>
+
+                <p id="p-detail-desc" style="color: var(--text-muted); line-height: 1.8; margin-bottom: 30px;"></p>
+
+                <div style="display: flex; gap: 15px;">
+                    <button class="whatsapp-btn" onclick="orderWhatsApp()">
+                        <i class="fa-brands fa-whatsapp"></i> Order via WhatsApp
+                    </button>
+                    <button class="btn-cta" style="flex: 0.5; padding: 15px;" onclick="addToCart()">
+                        Add to Cart
+                    </button>
+                </div>
+
+                <div id="shipping-banner-box" style="margin-top: 30px; padding: 20px; background: #fffbe6; border-radius: 12px; border: 1px solid #ffe58f;">
+                    <i class="fa-solid fa-truck-fast"></i> <strong id="shipping-text">Free Shipping</strong>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/store.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        let selectedSize = null;
+        let currentProduct = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const config = Store.getConfig();
+            document.getElementById('site-logo').innerText = config.siteName;
+            document.getElementById('shipping-text').innerText = config.shippingBanner || 'Free Shipping on all orders today!';
+            document.documentElement.style.setProperty('--primary', config.theme.primaryColor);
+            
+            currentProduct = Store.getProductById(productId);
+            if (!currentProduct) {
+                document.getElementById('product-detail-container').innerHTML = '<h2>Product not found</h2>';
+                return;
+            }
+
+            document.getElementById('p-detail-name').innerText = currentProduct.name;
+            document.getElementById('p-detail-price').innerText = currentProduct.price;
+            document.querySelector('.price-old').innerText = `$${(currentProduct.price * 1.4).toFixed(2)}`;
+            document.getElementById('p-detail-desc').innerText = currentProduct.description;
+
+            const slideshow = document.getElementById('slideshow');
+            slideshow.innerHTML = currentProduct.images.map((img, i) => `
+                <img src="${img}" style="width:100%; height:100%; object-fit:cover; display:${i === 0 ? 'block' : 'none'}" data-index="${i}">
+            `).join('');
+
+            const dots = document.getElementById('slide-dots');
+            dots.innerHTML = currentProduct.images.map((_, i) => `
+                <div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})" style="width:8px; height:8px; background:#ddd; border-radius:50%; cursor:pointer;"></div>
+            `).join('');
+
+            const sizeSelector = document.getElementById('size-selector');
+            sizeSelector.innerHTML = currentProduct.sizes.map(size => `
+                <div class="size-btn" onclick="selectSize(this, '${size}')">${size}</div>
+            `).join('');
+
+            updateCartBadge();
+        });
+
+        function goToSlide(index) {
+            document.querySelectorAll('#slideshow img').forEach(img => img.style.display = 'none');
+            document.querySelectorAll('.dot').forEach(dot => dot.classList.remove('active'));
+            document.querySelector(`#slideshow img[data-index="${index}"]`).style.display = 'block';
+            document.querySelectorAll('.dot')[index].classList.add('active');
+        }
+
+        function selectSize(btn, size) {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedSize = size;
+        }
+
+        function updateCartBadge() {
+            const cart = Store.getCart();
+            const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+            document.getElementById('cart-count-badge').innerText = count;
+        }
+
+        function addToCart() {
+            if (!selectedSize && currentProduct.sizes.length > 0) { alert('Please select a size!'); return; }
+            Store.addToCart(currentProduct, selectedSize);
+            alert('Added to cart!');
+            updateCartBadge();
+        }
+
+        function orderWhatsApp() {
+            if (!selectedSize && currentProduct.sizes.length > 0) { alert('Please select a size!'); return; }
+            
+            // Save to LocalStorage first (Backup)
+            Store.addOrder({
+                customer: { name: 'Direct WhatsApp', phone: 'N/A' },
+                details: `${currentProduct.name} (Size: ${selectedSize || 'N/A'})`,
+                total: `$${currentProduct.price}`
+            });
+
+            const phone = '+212776165813';
+            const message = `Hello, I want to order:\n\n*Product:* ${currentProduct.name}\n*Price:* $${currentProduct.price}\n*Size:* ${selectedSize || 'N/A'}\n\nThank you!`;
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+    </script>
+</body>
+</html>
